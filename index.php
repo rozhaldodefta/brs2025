@@ -1,0 +1,280 @@
+<?php
+// Jika ada parameter id → tampilkan halaman detail
+if (isset($_GET["id"])) {
+
+    $brs_id = $_GET["id"];
+    $url = "https://webapi.bps.go.id/v1/api/view/domain/6405/model/pressrelease/lang/ind/key/0e72953589cf3d4f628338969e2b5819/id/".$brs_id;
+
+    $curl = curl_init();
+    curl_setopt($curl, CURLOPT_URL, $url);
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+    $output = curl_exec($curl);
+    curl_close($curl);
+
+    $response = json_decode($output, TRUE);
+    ?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detail BRS</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light text-dark">
+<div class="container py-4">
+
+<?php
+    if (isset($response["data"])) {
+        $brs = $response["data"];
+?>
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h1 class="card-title mb-3"><?= htmlspecialchars($brs["title"]) ?></h1>
+            <p class="text-muted mb-3">Tanggal Rilis: <?= $brs["rl_date"] ?? '–' ?></p>
+
+            <div class="card mb-3 p-3 bg-light">
+                <?= html_entity_decode($brs["abstract"]) ?>
+            </div>
+
+            <a href="<?= $brs["pdf"] ?>" target="_blank" class="btn btn-success">
+                Download PDF (<?= $brs["size"] ?>)
+            </a>
+
+            <a href="index.php" class="btn btn-secondary ms-2">Kembali</a>
+        </div>
+    </div>
+
+<?php
+    } else {
+        echo "<div class='alert alert-warning'>Data tidak ditemukan.</div>";
+    }
+?>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+<?php
+exit;
+}
+
+
+
+// ======================================================================
+// MODE LIST DATA (TANPA ID) → Halaman Utama BRS
+// ======================================================================
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($page < 1) $page = 1;
+
+$search_query = isset($_GET['q']) ? trim($_GET['q']) : '';
+
+$api_key = '0e72953589cf3d4f628338969e2b5819';
+$url_base = "https://webapi.bps.go.id/v1/api/list/model/pressrelease/lang/ind/year/2025/domain/6405/key/{$api_key}";
+
+$api_params = ['page' => $page];
+
+if (!empty($search_query)) {
+    $api_params['search'] = $search_query;
+}
+
+$url = $url_base . '?' . http_build_query($api_params);
+
+// Ambil data API
+$curl = curl_init();
+curl_setopt($curl, CURLOPT_URL, $url);
+curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+$response = curl_exec($curl);
+curl_close($curl);
+
+$data = json_decode($response, TRUE);
+
+if (!$data || $data['status'] !== 'OK' || !isset($data['data'])) {
+    $api_error = true;
+} else {
+    $api_error = false;
+    $metadata = $data['data'][0];
+    $list_data = $data['data'][1];
+
+    $total_data = $metadata['total'] ?? 0;
+    $total_pages = $metadata['pages'] ?? 1;
+    $data_per_page = $metadata['perpage'] ?? 15;
+    $current_count = count($list_data);
+
+    setlocale(LC_TIME, 'id_ID.UTF-8', 'id_ID');
+}
+
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BRS - BPS Kab Berau</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+<style>
+body { background-color: #f8f9fa; }
+.table-responsive { box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-radius: 0.25rem; }
+.table th { border-top: none; }
+.page-link { color: #0056b3; }
+.page-item.active .page-link { background-color: #0056b3; border-color: #0056b3; }
+</style>
+</head>
+
+<body>
+
+<main class="container py-4">
+
+<h1 class="mb-4 text-center">Berita Resmi Statistik</h1>
+
+
+
+<?php if ($api_error): ?>
+<div class="alert alert-danger text-center">
+    Gagal mengambil data dari API. Silakan coba lagi nanti.
+</div>
+
+<?php else: ?>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <?php if (!empty($search_query)): ?>
+        <p class="mb-0 text-muted">
+            Hasil pencarian untuk: <strong>"<?php echo htmlspecialchars($search_query); ?>"</strong>
+        </p>
+        <?php endif; ?>
+
+        <p class="mb-0 text-muted">
+            Menampilkan <strong><?php echo $current_count; ?></strong> data dari total
+            <strong><?php echo number_format($total_data, 0, ',', '.'); ?></strong> publikasi.
+        </p>
+    </div>
+
+    <p class="mb-0 text-muted">
+        Halaman <strong><?php echo $page; ?></strong> dari <strong><?php echo $total_pages; ?></strong>
+    </p>
+</div>
+
+<div class="table-responsive mb-4">
+<table class="table table-striped table-hover align-middle">
+<thead class="table-primary">
+<tr>
+    <th style="width:5%;">No</th>
+    <th>Judul Berita</th>
+    <th style="width:20%;">Tanggal Rilis</th>
+</tr>
+</thead>
+<tbody>
+
+<?php
+if ($current_count > 0):
+    $start_number = ($page - 1) * $data_per_page + 1;
+
+    foreach ($list_data as $index => $brs):
+        $nomor_urut = $start_number + $index;
+        $tanggal_format = strftime('%d %B %Y', strtotime($brs['rl_date']));
+?>
+<tr>
+    <th><?php echo $nomor_urut; ?></th>
+
+    <td>
+        <a href="index.php?id=<?php echo $brs['brs_id']; ?>"
+           class="text-decoration-none fw-semibold">
+           <?php echo htmlspecialchars($brs['title']); ?>
+        </a>
+    </td>
+
+    <td><?php echo $tanggal_format; ?></td>
+</tr>
+
+<?php
+    endforeach;
+
+else:
+?>
+<tr>
+    <td colspan="3" class="text-center">Tidak ada data.</td>
+</tr>
+
+<?php endif; ?>
+
+</tbody>
+</table>
+</div>
+
+<?php if ($total_pages > 1): ?>
+<nav aria-label="Navigasi halaman">
+<ul class="pagination justify-content-center flex-wrap">
+
+<?php
+function build_page_url($p, $q) {
+    $params = ['page' => $p];
+    if (!empty($q)) $params['q'] = $q;
+    return '?' . http_build_query($params);
+}
+?>
+
+<li class="page-item <?php echo ($page==1?'disabled':''); ?>">
+    <a class="page-link" href="<?= build_page_url(1,$search_query) ?>">
+        <i class="bi bi-chevron-double-left"></i>
+        First
+    </a>
+</li>
+
+<li class="page-item <?php echo ($page==1?'disabled':''); ?>">
+    <a class="page-link" href="<?= build_page_url($page-1,$search_query) ?>">
+        <i class="bi bi-chevron-left"></i> Previous
+    </a>
+</li>
+
+<?php
+$range=2;
+$start=max(1,$page-$range);
+$end=min($total_pages,$page+$range);
+
+if ($start>1){
+    echo '<li class="page-item"><a class="page-link" href="'.build_page_url(1,$search_query).'">1</a></li>';
+    if ($start>2){
+        echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+    }
+}
+
+for ($i=$start;$i<=$end;$i++){
+    $active=($i==$page)?'active':'';
+    echo "<li class='page-item $active'><a class='page-link' href='".build_page_url($i,$search_query)."'>$i</a></li>";
+}
+
+if ($end<$total_pages){
+    if ($end < $total_pages-1){
+        echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+    }
+    echo '<li class="page-item"><a class="page-link" href="'.build_page_url($total_pages,$search_query).'">'.$total_pages.'</a></li>';
+}
+?>
+
+<li class="page-item <?php echo ($page==$total_pages?'disabled':''); ?>">
+    <a class="page-link" href="<?= build_page_url($page+1,$search_query) ?>">
+        Next <i class="bi bi-chevron-right"></i>
+    </a>
+</li>
+
+<li class="page-item <?php echo ($page==$total_pages?'disabled':''); ?>">
+    <a class="page-link" href="<?= build_page_url($total_pages,$search_query) ?>">
+        Last <i class="bi bi-chevron-double-right"></i>
+    </a>
+</li>
+
+</ul>
+</nav>
+<?php endif; ?>
+
+<?php endif; ?>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
