@@ -23,6 +23,15 @@ body { background-color: #f8f9fa; }
 <main class="container py-4">
     <h1 class="mb-4 text-center">Berita Resmi Statistik</h1>
 
+    <!-- Search -->
+    <div class="d-flex justify-content-center mb-4">
+        <form class="d-flex search-box" onsubmit="doSearch(event)">
+            <input id="searchInput" class="form-control me-2" type="search"
+                   placeholder="Cari judul..." value="">
+            <button class="btn btn-primary" type="submit">Cari</button>
+        </form>
+    </div>
+
     <div id="content"></div>
 </main>
 
