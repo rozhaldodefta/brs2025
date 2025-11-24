@@ -1,31 +1,16 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BRS - BPS Kabupaten Berau</title>
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-
-<style>
-body { background-color: #f8f9fa; }
-.table-responsive { box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-radius: 0.25rem; }
-.page-link { color: #0056b3; }
-.page-item.active .page-link { background-color: #0056b3; border-color: #0056b3; }
-</style>
-</head>
-
-<body>
-<main class="container py-4">
-    <h1 class="mb-4 text-center">Berita Resmi Statistik</h1>
-
-    <!-- (SEARCH DIHAPUS) -->
-
-    <div id="content"></div>
-</main>
-
 <script>
+// =============================
+// PROXY AGAR API BPS BISA DIAMBIL
+// =============================
+// GANTI DENGAN WORKER KAMU
+const PROXY_URL = "https://nama-proxy.workers.dev";
+
+// Fungsi fetch lewat proxy
+function fetchAPI(url) {
+    return fetch(PROXY_URL + "?url=" + encodeURIComponent(url))
+           .then(res => res.json());
+}
+
 // ========================================================
 // GET URL PARAM
 // ========================================================
@@ -49,10 +34,12 @@ if (brsID) {
 // DETAIL PAGE
 // ========================================================
 function loadDetail(id) {
-    const url = `https://webapi.bps.go.id/v1/api/view/domain/6405/model/pressrelease/lang/ind/key/0e72953589cf3d4f628338969e2b5819/id/${id}`;
 
-    fetch(url)
-        .then(res => res.json())
+    const url =
+      `https://webapi.bps.go.id/v1/api/view/domain/6405/model/pressrelease/lang/ind/key/0e72953589cf3d4f628338969e2b5819/id/${id}`;
+
+    // gunakan proxy
+    fetchAPI(url)
         .then(data => {
             if (!data.data) {
                 document.getElementById("content").innerHTML =
@@ -94,11 +81,12 @@ function loadList() {
     const page = getParam("page") ? parseInt(getParam("page")) : 1;
 
     const key = "0e72953589cf3d4f628338969e2b5819";
-    let url =
-        `https://webapi.bps.go.id/v1/api/list/model/pressrelease/lang/ind/year/2025/domain/6405/key/${key}?page=${page}`;
 
-    fetch(url)
-        .then(res => res.json())
+    const url =
+      `https://webapi.bps.go.id/v1/api/list/model/pressrelease/lang/ind/year/2025/domain/6405/key/${key}?page=${page}`;
+
+    // gunakan proxy
+    fetchAPI(url)
         .then(json => {
             if (!json.data) {
                 document.getElementById("content").innerHTML =
@@ -176,9 +164,7 @@ function loadList() {
 
             html += `</tbody></table></div>`;
 
-            // ====================
             // PAGINATION
-            // ====================
             html += buildPagination(page, totalPages);
 
             document.getElementById("content").innerHTML = html;
@@ -191,7 +177,7 @@ function loadList() {
 }
 
 // ========================================================
-// PAGINATION
+// PAGINATION (TIDAK DIUBAH)
 // ========================================================
 function buildPagination(page, total) {
     if (total <= 1) return "";
@@ -256,7 +242,3 @@ function buildPagination(page, total) {
     return html;
 }
 </script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
