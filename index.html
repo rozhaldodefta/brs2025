@@ -23,34 +23,32 @@ body { background-color: #f8f9fa; }
 </main>
 
 <script>
-// ======================================
-// PROXY SETUP (ANTI CORS)
-// ======================================
-const PROXY_URL = "https://brs.rozhaldodefta.workers.dev";
-
+// ------------------------------------------------------
+// PROXY UNTUK API (tanpa CORS)
+// ------------------------------------------------------
 function fetchAPI(url) {
-    return fetch(PROXY_URL + "?url=" + encodeURIComponent(url))
+    return fetch("proxy.php?url=" + encodeURIComponent(url))
            .then(res => res.json());
 }
 
-// ======================================
+// ------------------------------------------------------
 // GET URL PARAM
-// ======================================
+// ------------------------------------------------------
 function getParam(name) {
     const url = new URL(window.location.href);
     return url.searchParams.get(name);
 }
 
-// ======================================
-// DECIDE MODE: LIST or DETAIL
-// ======================================
+// ------------------------------------------------------
+// MODE DETAIL / LIST
+// ------------------------------------------------------
 const brsID = getParam("id");
 if (brsID) loadDetail(brsID);
 else loadList();
 
-// ======================================
+// ------------------------------------------------------
 // DETAIL PAGE
-// ======================================
+// ------------------------------------------------------
 function loadDetail(id) {
 
     const url =
@@ -91,9 +89,9 @@ function loadDetail(id) {
         });
 }
 
-// ======================================
+// ------------------------------------------------------
 // LIST PAGE
-// ======================================
+// ------------------------------------------------------
 function loadList() {
     const page = getParam("page") ? parseInt(getParam("page")) : 1;
     const key = "0e72953589cf3d4f628338969e2b5819";
@@ -103,7 +101,6 @@ function loadList() {
 
     fetchAPI(url)
         .then(json => {
-
             if (!json.data) {
                 document.getElementById("content").innerHTML =
                     `<div class="alert alert-danger text-center">Tidak dapat memuat data API.</div>`;
@@ -186,9 +183,9 @@ function loadList() {
         });
 }
 
-// ======================================
+// ------------------------------------------------------
 // PAGINATION
-// ======================================
+// ------------------------------------------------------
 function buildPagination(page, total) {
     if (total <= 1) return "";
 
