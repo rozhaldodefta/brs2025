@@ -13,9 +13,6 @@ body { background-color: #f8f9fa; }
 .table-responsive { box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-radius: 0.25rem; }
 .page-link { color: #0056b3; }
 .page-item.active .page-link { background-color: #0056b3; border-color: #0056b3; }
-.search-box {
-    max-width: 320px;
-}
 </style>
 </head>
 
@@ -23,19 +20,8 @@ body { background-color: #f8f9fa; }
 <main class="container py-4">
     <h1 class="mb-4 text-center">Berita Resmi Statistik</h1>
 
-    <!-- Search -->
-    <div class="d-flex justify-content-center mb-4">
-        <form class="d-flex search-box" onsubmit="doSearch(event)">
-            <input id="searchInput" class="form-control me-2" type="search"
-                   placeholder="Cari judul..." value="">
-            <button class="btn btn-primary" type="submit">Cari</button>
-        </form>
-    </div>
-
-    <div id="content"></div>
-</main>
-
-<script>
+<div id="content"></div> </main> 
+ <script>
 // ========================================================
 // GET URL PARAM
 // ========================================================
@@ -44,20 +30,8 @@ function getParam(name) {
     return url.searchParams.get(name);
 }
 
-// APPLY SEARCH VALUE
-document.getElementById("searchInput").value = getParam("q") ?? "";
-
-// SEARCH FUNCTION
-function doSearch(e) {
-    e.preventDefault();
-    const q = document.getElementById("searchInput").value.trim();
-    let url = "?page=1";
-    if (q !== "") url += "&q=" + encodeURIComponent(q);
-    window.location = url;
-}
-
 // ========================================================
-// MODE DETAIL / MODE LIST
+// MODE DETAIL / LIST
 // ========================================================
 const brsID = getParam("id");
 
@@ -110,17 +84,14 @@ function loadDetail(id) {
 }
 
 // ========================================================
-// LIST PAGE (DAFTAR BRS)
+// LIST PAGE
 // ========================================================
 function loadList() {
     const page = getParam("page") ? parseInt(getParam("page")) : 1;
-    const q = getParam("q") ?? "";
 
     const key = "0e72953589cf3d4f628338969e2b5819";
     let url =
         `https://webapi.bps.go.id/v1/api/list/model/pressrelease/lang/ind/year/2025/domain/6405/key/${key}?page=${page}`;
-
-    if (q !== "") url += `&search=${encodeURIComponent(q)}`;
 
     fetch(url)
         .then(res => res.json())
@@ -131,15 +102,13 @@ function loadList() {
                 return;
             }
 
-            // ===== DETEKSI FORMAT API BARU / LAMA =====
+            // Format API baru/lama
             let meta, list;
 
             if (Array.isArray(json.data)) {
-                // Format API Lama
                 meta = json.data[0];
                 list = json.data[1];
             } else {
-                // Format API Baru
                 meta = json.data;
                 list = json.data.result;
             }
@@ -150,24 +119,15 @@ function loadList() {
 
             let html = `
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-            `;
+                    <p class="mb-0 text-muted">Menampilkan
+                        <strong>${list.length}</strong> dari total
+                        <strong>${totalData}</strong> publikasi.
+                    </p>
 
-            if (q !== "") {
-                html += `
-                    <p class="mb-0 text-muted">Hasil pencarian untuk:
-                        <strong>"${q}"</strong></p>`;
-            }
-
-            html += `
-                <p class="mb-0 text-muted">Menampilkan
-                <strong>${list.length}</strong> dari total
-                <strong>${totalData}</strong> publikasi.</p>
+                    <p class="mb-0 text-muted">Halaman
+                        <strong>${page}</strong> dari <strong>${totalPages}</strong>
+                    </p>
                 </div>
-
-                <p class="mb-0 text-muted">Halaman
-                <strong>${page}</strong> dari <strong>${totalPages}</strong></p>
-            </div>
             `;
 
             // ====================
@@ -215,7 +175,7 @@ function loadList() {
             // ====================
             // PAGINATION
             // ====================
-            html += buildPagination(page, totalPages, q);
+            html += buildPagination(page, totalPages);
 
             document.getElementById("content").innerHTML = html;
 
@@ -229,13 +189,11 @@ function loadList() {
 // ========================================================
 // PAGINATION
 // ========================================================
-function buildPagination(page, total, q) {
+function buildPagination(page, total) {
     if (total <= 1) return "";
 
     function link(p) {
-        let url = `?page=${p}`;
-        if (q) url += `&q=${encodeURIComponent(q)}`;
-        return url;
+        return `?page=${p}`;
     }
 
     let html = `<nav><ul class="pagination justify-content-center flex-wrap">`;
@@ -273,7 +231,6 @@ function buildPagination(page, total, q) {
     if (end < total) {
         if (end < total - 1)
             html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
-
         html += `<li class="page-item"><a class="page-link" href="${link(total)}">${total}</a></li>`;
     }
 
