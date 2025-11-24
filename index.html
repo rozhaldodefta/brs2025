@@ -2,8 +2,7 @@
 // =============================
 // PROXY AGAR API BPS BISA DIAMBIL
 // =============================
-// GANTI DENGAN WORKER KAMU
-const PROXY_URL = "https://nama-proxy.workers.dev";
+const PROXY_URL = "https://brs.rozhaldodefta.workers.dev";
 
 // Fungsi fetch lewat proxy
 function fetchAPI(url) {
@@ -38,7 +37,6 @@ function loadDetail(id) {
     const url =
       `https://webapi.bps.go.id/v1/api/view/domain/6405/model/pressrelease/lang/ind/key/0e72953589cf3d4f628338969e2b5819/id/${id}`;
 
-    // gunakan proxy
     fetchAPI(url)
         .then(data => {
             if (!data.data) {
@@ -85,7 +83,6 @@ function loadList() {
     const url =
       `https://webapi.bps.go.id/v1/api/list/model/pressrelease/lang/ind/year/2025/domain/6405/key/${key}?page=${page}`;
 
-    // gunakan proxy
     fetchAPI(url)
         .then(json => {
             if (!json.data) {
